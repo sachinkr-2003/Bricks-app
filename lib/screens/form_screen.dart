@@ -42,9 +42,10 @@ class _FormScreenState extends State<FormScreen> {
   }
 
   Future<void> _submitForm() async {
-    if (_selectedImages.isEmpty) {
+    // Only require image for material bills
+    if (_selectedImages.isEmpty && widget.title == 'Add New Material') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please attach at least one photo/bill!'), backgroundColor: Colors.red),
+        const SnackBar(content: Text('Please attach the bill photo for material entry!'), backgroundColor: Colors.red),
       );
       return;
     }

@@ -34,10 +34,12 @@ class ApiService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        // Save token and user details to SharedPreferences
+        // Backend returns flat object: {_id, name, phone, role, token}
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', data['token']);
-        await prefs.setString('user', jsonEncode(data['user']));
+        // Store full user object (minus token) for later use
+        final userObj = Map<String, dynamic>.from(data)..remove('token');
+        await prefs.setString('user', jsonEncode(userObj));
         return {'success': true, 'data': data};
       } else {
         return {'success': false, 'message': data['message'] ?? 'Login failed'};
