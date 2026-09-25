@@ -109,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              'SECURE CLIENT PORTAL',
+                              'STAFF & CLIENT PORTAL',
                               textAlign: TextAlign.center,
                               style: GoogleFonts.inter(
                                 color: const Color(0xFF64748B),
