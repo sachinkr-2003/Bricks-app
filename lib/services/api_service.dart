@@ -3,10 +3,9 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  // Use http://10.0.2.2:5000/api for Android Emulator
-  // Use http://localhost:5000/api for Web/Chrome
-  // Use your computer's IP (e.g. http://192.168.x.x:5000/api) for physical device testing
-  static const String baseUrl = 'http://10.0.2.2:5000/api'; 
+  // Production Live API on Render
+  // Do not use localhost or IP here anymore, this hits the real cloud backend.
+  static const String baseUrl = 'https://bricks-backend-fk3q.onrender.com/api';
 
   // Singleton pattern
   static final ApiService _instance = ApiService._internal();
