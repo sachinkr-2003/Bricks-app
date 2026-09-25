@@ -72,13 +72,19 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const UpdatesScreen(),
-    const MaterialsScreen(),
-    const BudgetScreen(),
-    const WarrantyScreen(),
-  ];
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      HomeScreen(onNavigate: (index) => setState(() => _currentIndex = index)),
+      const UpdatesScreen(),
+      const MaterialsScreen(),
+      const BudgetScreen(),
+      const WarrantyScreen(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
