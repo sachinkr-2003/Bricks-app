@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'form_screen.dart';
 
 class UpdatesScreen extends StatelessWidget {
   const UpdatesScreen({super.key});
@@ -19,26 +20,36 @@ class UpdatesScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildUpdateCard(
-            date: '19 Sep 2026',
-            type: 'DAILY UPDATE',
-            completed: 'Completed wooden shuttering for ground floor hall.',
-            inProgress: 'Steel mesh binding is 50% done.',
-            nextPlan: 'Complete steel binding to pour concrete tomorrow.',
-            issues: 'None',
-            hasPhotos: true,
-          ),
-          const SizedBox(height: 16),
-          _buildUpdateCard(
-            date: '12 Sep 2026',
-            type: 'WEEKLY UPDATE',
-            completed: 'All brickwork for ground floor walls finished.',
-            inProgress: 'Plumbing rough-ins in bathrooms.',
-            nextPlan: 'Start shuttering process next week.',
-            issues: 'Slight delay in plumbing pipes delivery.',
-            hasPhotos: false,
-          ),
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.feed_outlined, size: 64, color: const Color(0xFFCBD5E1)),
+                const SizedBox(height: 16),
+                Text('No Updates Yet', style: GoogleFonts.merriweather(fontWeight: FontWeight.bold, fontSize: 18, color: const Color(0xFF0F172A))),
+                const SizedBox(height: 8),
+                Text('Tap "NEW UPDATE" below to add today\'s first progress update.', textAlign: TextAlign.center, style: TextStyle(color: const Color(0xFF64748B), fontSize: 13)),
+              ],
+            ),
+          )
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const FormScreen(title: 'Submit Daily Update')),
+          );
+        },
+        backgroundColor: const Color(0xFFEA580C),
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('NEW UPDATE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
       ),
     );
   }

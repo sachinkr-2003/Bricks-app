@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart'; 
+import '../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,197 +15,155 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
+    final phone = _phoneController.text.trim();
+    final pin = _passwordController.text.trim();
+
+    if (phone.isEmpty || pin.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter Mobile Number and PIN')));
+      return;
+    }
+
     setState(() => _isLoading = true);
     
-    // Simulate API delay
-    Future.delayed(const Duration(seconds: 1), () {
-      if (!mounted) return;
+    // Call the real backend API
+    final result = await ApiService().login(phone, pin);
+    
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (result['success']) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const MainNavigation()),
       );
-    });
+    } else {
+      // Show error from backend
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message']), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF070B14), // Ultra deep slate/black
+      backgroundColor: const Color(0xFFF1F5F9), // Classic Light Slate background
       body: Stack(
         children: [
-          // Background Aesthetic Grid Overlay
-          Positioned.fill(
-            child: CustomPaint(
-              painter: GridPainter(),
+          // Subtle top color bar representing the brand
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 120,
+              color: const Color(0xFF0F172A), // Brand dark navy
             ),
           ),
           
-          // Orange Glow Effect (Top Right)
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFFEA580C).withOpacity(0.15),
-                backgroundBlendMode: BlendMode.screen,
-              ),
-              child: BackdropFilter(
-                filter: ColorFilter.mode(Colors.transparent, BlendMode.srcOver),
-                child: Container(color: Colors.transparent), // Forces blur calculation
-              ),
-            ),
-          ),
-          
-          // Blue Glow Effect (Bottom Left)
-          Positioned(
-            bottom: -100,
-            left: -100,
-            child: Container(
-              width: 400,
-              height: 400,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF2563EB).withOpacity(0.10),
-                backgroundBlendMode: BlendMode.screen,
-              ),
-            ),
-          ),
-
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     
-                    // Brand Identity
-                    Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          child: Image.asset('assets/images/logo.png', fit: BoxFit.contain),
-                        ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'BRICK BY',
-                              style: GoogleFonts.merriweather(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 22,
-                                letterSpacing: 2.0,
-                                height: 1.0,
-                              ),
-                            ),
-                            Text(
-                              'BRICK',
-                              style: GoogleFonts.merriweather(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 22,
-                                letterSpacing: 2.0,
-                                height: 1.0,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    Text(
-                      'CLIENT PORTAL AUTHENTICATION',
-                      style: GoogleFonts.inter(
-                        color: const Color(0xFF94A3B8),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 9,
-                        letterSpacing: 2.5,
-                      ),
-                    ),
-                    const SizedBox(height: 48),
-
-                    // Login Box
+                    // Main Premium Card
                     Container(
-                      padding: const EdgeInsets.all(32),
+                      width: double.infinity,
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      padding: const EdgeInsets.all(40),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0F172A).withOpacity(0.8), // Dark slate glass
-                        border: Border.all(color: const Color(0xFF1E293B)),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.5),
-                            blurRadius: 40,
-                            offset: const Offset(0, 20),
+                            color: const Color(0xFF0F172A).withOpacity(0.08),
+                            blurRadius: 32,
+                            offset: const Offset(0, 16),
                           ),
                         ],
                       ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
+                          // Brand Identity
+                          Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            padding: const EdgeInsets.all(8),
+                            child: Image.asset('assets/images/logo.png', fit: BoxFit.contain),
+                          ),
+                          const SizedBox(height: 16),
+                          
                           Text(
-                            'Authorization',
+                            'BRICK BY BRICK',
+                            textAlign: TextAlign.center,
                             style: GoogleFonts.merriweather(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              letterSpacing: 1.0,
+                              color: const Color(0xFF0F172A),
+                              fontWeight: FontWeight.w900,
+                              fontSize: 20,
+                              letterSpacing: 1.5,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 6),
                           Text(
-                            'Enter your connected mobile number to continue.',
+                            'SECURE CLIENT PORTAL',
+                            textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: const Color(0xFF64748B),
-                              fontWeight: FontWeight.w500,
-                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                              letterSpacing: 2.5,
                             ),
                           ),
-                          const SizedBox(height: 32),
                           
-                          // Custom Dark Field: Phone
-                          _buildPremiumTextField(
-                            label: 'REGISTERED MOBILE',
+                          const SizedBox(height: 48),
+                          
+                          // Classic Field: Phone
+                          _buildClassicTextField(
+                            label: 'Registered Mobile',
                             controller: _phoneController,
                             icon: Icons.phone_android,
-                            hint: '98765 43210',
+                            hint: 'Enter your 10-digit number',
                             isObscure: false,
                           ),
                           const SizedBox(height: 24),
                           
-                          // Custom Dark Field: Password
-                          _buildPremiumTextField(
-                            label: 'SECURE PIN',
+                          // Classic Field: Password
+                          _buildClassicTextField(
+                            label: 'Secure PIN',
                             controller: _passwordController,
                             icon: Icons.lock_outline,
-                            hint: '••••••••',
+                            hint: 'Enter your secure PIN',
                             isObscure: true,
                           ),
                           
-                          const SizedBox(height: 40),
+                          const SizedBox(height: 48),
                           
-                          // Submit Button
+                          // Classic Submit Button
                           SizedBox(
                             width: double.infinity,
-                            height: 56,
+                            height: 54,
                             child: ElevatedButton(
                               onPressed: _isLoading ? null : _handleLogin,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFFEA580C),
                                 foregroundColor: Colors.white,
                                 elevation: 0,
-                                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                               ),
                               child: _isLoading 
                                 ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                : Text('ACCESS DASHBOARD', style: GoogleFonts.inter(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 12)),
+                                : Text('Sign In Securely', style: GoogleFonts.inter(fontWeight: FontWeight.w700, letterSpacing: 0.5, fontSize: 15)),
                             ),
                           ),
                         ],
@@ -212,15 +171,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     
                     const SizedBox(height: 32),
-                    Center(
-                      child: Text(
-                        'POWERED BY BRICK BY BRICK ENTERPRISE SECURE',
-                        style: GoogleFonts.inter(
-                          color: const Color(0xFF475569),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 8,
-                          letterSpacing: 1.0,
-                        ),
+                    
+                    // Simple minimal footer
+                    Text(
+                      '© ${DateTime.now().year} Brick By Brick Enterprises.',
+                      style: GoogleFonts.inter(
+                        color: const Color(0xFF94A3B8),
+                        fontWeight: FontWeight.w500,
+                        fontSize: 11,
                       ),
                     ),
                   ],
@@ -233,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildPremiumTextField({
+  Widget _buildClassicTextField({
     required String label,
     required TextEditingController controller,
     required IconData icon,
@@ -246,43 +204,36 @@ class _LoginScreenState extends State<LoginScreen> {
         Text(
           label,
           style: GoogleFonts.inter(
-            fontSize: 9,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF94A3B8),
-            letterSpacing: 2.0,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF475569),
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          height: 56,
-          decoration: BoxDecoration(
-            color: const Color(0xFF070B14),
-            border: Border.all(color: const Color(0xFF334155)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                color: const Color(0xFF1E293B).withOpacity(0.5),
-                child: Icon(icon, color: const Color(0xFF94A3B8), size: 20),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  obscureText: isObscure,
-                  keyboardType: isObscure ? TextInputType.text : TextInputType.phone,
-                  style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                  decoration: InputDecoration(
-                    hintText: hint,
-                    hintStyle: GoogleFonts.inter(color: const Color(0xFF475569), fontWeight: FontWeight.w500),
-                    border: InputBorder.none,
-                    isDense: true,
-                  ),
-                ),
-              ),
-            ],
+        TextField(
+          controller: controller,
+          obscureText: isObscure,
+          keyboardType: isObscure ? TextInputType.text : TextInputType.phone,
+          style: GoogleFonts.inter(color: const Color(0xFF0F172A), fontWeight: FontWeight.w600, fontSize: 15),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontWeight: FontWeight.w400, fontSize: 14),
+            prefixIcon: Icon(icon, color: const Color(0xFF94A3B8), size: 20),
+            filled: true,
+            fillColor: const Color(0xFFF8FAFC),
+            contentPadding: const EdgeInsets.symmetric(vertical: 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFF0F172A), width: 1.5),
+            ),
           ),
         ),
       ],
@@ -295,27 +246,4 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.dispose();
     super.dispose();
   }
-}
-
-// Custom Grid Painter for the architectural background
-class GridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF1E293B).withOpacity(0.3)
-      ..strokeWidth = 1;
-
-    const double spacing = 32.0;
-
-    for (double i = 0; i < size.width; i += spacing) {
-      canvas.drawLine(Offset(i, 0), Offset(i, size.height), paint);
-    }
-
-    for (double i = 0; i < size.height; i += spacing) {
-      canvas.drawLine(Offset(0, i), Offset(size.width, i), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

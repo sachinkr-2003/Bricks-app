@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'form_screen.dart';
 
 class WarrantyScreen extends StatelessWidget {
   const WarrantyScreen({super.key});
@@ -66,7 +67,12 @@ class WarrantyScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const FormScreen(title: 'Lodge Complaint')),
+                  );
+                },
                 icon: const Icon(Icons.support_agent),
                 label: const Text('LODGE A COMPLAINT', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
                 style: ElevatedButton.styleFrom(

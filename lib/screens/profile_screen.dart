@@ -1,11 +1,95 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  Map<String, dynamic>? _user;
+  bool _isLoading = true;
+  bool _isUploading = false;
+  final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final res = await ApiService().getData('/auth/profile');
+    if (res['success'] && mounted) {
+      setState(() {
+        _user = res['data'];
+        _isLoading = false;
+      });
+      // Update local storage just in case
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user', jsonEncode(_user));
+    } else if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image == null) return;
+
+      setState(() => _isUploading = true);
+
+      // 1. Upload the image to get URL
+      final uploadRes = await ApiService().uploadImages([image.path]);
+      if (uploadRes['success'] && uploadRes['urls'].length > 0) {
+        final imageUrl = uploadRes['urls'][0];
+        
+        // 2. Update backend profile
+        final updateRes = await ApiService().putData('/auth/profile', {'profileImage': imageUrl});
+        if (updateRes['success'] && mounted) {
+          setState(() {
+            _user = updateRes['data'];
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile image updated!'), backgroundColor: Colors.green),
+          );
+        }
+      } else {
+        throw Exception('Failed to upload image');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF0F172A),
+        body: Center(child: CircularProgressIndicator(color: Color(0xFFEA580C))),
+      );
+    }
+
+    final name = _user?['name'] ?? 'Unknown User';
+    final role = (_user?['role'] ?? 'Client').toString().toUpperCase();
+    final profileImage = _user?['profileImage'];
+    final phone = _user?['phone'] ?? 'N/A';
+
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9), // Light background
       appBar: AppBar(
@@ -44,16 +128,16 @@ class ProfileScreen extends StatelessWidget {
                         padding: const EdgeInsets.all(4),
                         child: Container(
                           color: const Color(0xFF0F172A),
-                          child: const Icon(Icons.person, color: Colors.white, size: 48),
+                          child: profileImage != null && profileImage.isNotEmpty
+                              ? Image.network(profileImage, fit: BoxFit.cover)
+                              : const Icon(Icons.person, color: Colors.white, size: 48),
                         ),
                       ),
                       Positioned(
                         bottom: -4,
                         right: -4,
                         child: GestureDetector(
-                          onTap: () {
-                            // Trigger image picker logic here in the future
-                          },
+                          onTap: _isUploading ? null : _pickAndUploadImage,
                           child: Container(
                             width: 32,
                             height: 32,
@@ -61,7 +145,9 @@ class ProfileScreen extends StatelessWidget {
                               color: const Color(0xFFEA580C),
                               border: Border.all(color: const Color(0xFF0F172A), width: 3),
                             ),
-                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                            child: _isUploading
+                                ? const Padding(padding: EdgeInsets.all(6), child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                : const Icon(Icons.camera_alt, color: Colors.white, size: 16),
                           ),
                         ),
                       ),
@@ -69,15 +155,15 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'Rajesh Gupta',
-                    style: GoogleFonts.merriweather(fontWeight: FontWeight.bold, fontSize: 28, color: Colors.white),
+                    name,
+                    style: GoogleFonts.merriweather(fontWeight: FontWeight.bold, fontSize: 24, color: Colors.white),
                   ),
                   const SizedBox(height: 6),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(color: Colors.green.shade900.withOpacity(0.5), border: Border.all(color: Colors.green.shade700)),
                     child: Text(
-                      'ACTIVE PROPERTIES OWNER',
+                      '$role ACCESS',
                       style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.greenAccent, letterSpacing: 1.5),
                     ),
                   ),
@@ -99,7 +185,7 @@ class ProfileScreen extends StatelessWidget {
                       decoration: const BoxDecoration(border: Border(right: BorderSide(color: Color(0xFFE2E8F0), width: 1.5))),
                       child: Column(
                         children: [
-                          Text('2', style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 24, color: const Color(0xFF0F172A))),
+                          Text('1', style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 24, color: const Color(0xFF0F172A))),
                           const SizedBox(height: 4),
                           Text('ACTIVE SITES', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 9, color: const Color(0xFF64748B), letterSpacing: 1.0)),
                         ],
@@ -111,9 +197,9 @@ class ProfileScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       child: Column(
                         children: [
-                          Text('Oct 2024', style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 24, color: const Color(0xFFEA580C))),
+                          Text('✓', style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 24, color: const Color(0xFFEA580C))),
                           const SizedBox(height: 4),
-                          Text('MEMBER SINCE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 9, color: const Color(0xFF64748B), letterSpacing: 1.0)),
+                          Text('SECURE LOGIN', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 9, color: const Color(0xFF64748B), letterSpacing: 1.0)),
                         ],
                       ),
                     ),
@@ -137,9 +223,8 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        _buildDetailRow('PHONE NUMBER', '+91 9876543210', Icons.phone_android, hasBorder: true),
-                        _buildDetailRow('EMAIL ADDRESS', 'rajesh.gupta@email.com', Icons.mail_outline, hasBorder: true),
-                        _buildDetailRow('SITE ID', 'PRJ-1049-DLF', Icons.architecture, hasBorder: false),
+                        _buildDetailRow('PHONE NUMBER', phone, Icons.phone_android, hasBorder: true),
+                        _buildDetailRow('USER ROLE', role, Icons.shield, hasBorder: false),
                       ],
                     ),
                   ),
@@ -157,7 +242,7 @@ class ProfileScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: hasBorder ? Border(bottom: BorderSide(color: const Color(0xFFE2E8F0), width: 1.5)) : null,
+        border: hasBorder ? const Border(bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1.5)) : null,
       ),
       child: Row(
         children: [
@@ -181,4 +266,4 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
-} // Custom color definition override due to flutter Colors.slate not existing, wait flutter does not have Colors.slate.
+}

@@ -1,8 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/api_service.dart';
+import 'form_screen.dart';
 
-class MaterialsScreen extends StatelessWidget {
+class MaterialsScreen extends StatefulWidget {
   const MaterialsScreen({super.key});
+
+  @override
+  State<MaterialsScreen> createState() => _MaterialsScreenState();
+}
+
+class _MaterialsScreenState extends State<MaterialsScreen> {
+  List<dynamic> _materials = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchMaterials();
+  }
+
+  Future<void> _fetchMaterials() async {
+    final res = await ApiService().getData('/materials');
+    if (res['success'] && mounted) {
+      setState(() {
+        _materials = res['data'];
+        _isLoading = false;
+      });
+    } else if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,15 +47,61 @@ class MaterialsScreen extends StatelessWidget {
           IconButton(icon: const Icon(Icons.filter_list, color: Color(0xFF0F172A)), onPressed: () {}),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildMaterialCard('Cement (Ultratech)', '100 Bags', 'Shree Building Materials', '₹35,000', '15 Sep 2026', true),
-          const SizedBox(height: 12),
-          _buildMaterialCard('Steel (TMT 12mm)', '800 Kg', 'IronWorks India', '₹45,500', '10 Sep 2026', false),
-          const SizedBox(height: 12),
-          _buildMaterialCard('Bricks (Red)', '5000 Pcs', 'Local Brick Kiln', '₹40,000', '02 Sep 2026', true),
-        ],
+      body: _isLoading 
+          ? const Center(child: CircularProgressIndicator())
+          : _materials.isEmpty 
+              ? Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(32),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.inventory_2_outlined, size: 64, color: const Color(0xFFCBD5E1)),
+                        const SizedBox(height: 16),
+                        Text('No Materials Logged', style: GoogleFonts.merriweather(fontWeight: FontWeight.bold, fontSize: 18, color: const Color(0xFF0F172A))),
+                        const SizedBox(height: 8),
+                        Text('Hit the "ADD MATERIAL" button below to start tracking your purchases and bills.', textAlign: TextAlign.center, style: TextStyle(color: const Color(0xFF64748B), fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _materials.length,
+                  itemBuilder: (context, index) {
+                    final item = _materials[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _buildMaterialCard(
+                        item['materialName'] ?? 'Unknown',
+                        '${item['quantity']} ${item['unit']}',
+                        item['supplierName'] ?? 'Unknown',
+                        '₹${item['totalCost']}',
+                        'Date: ${item['date']}'.substring(0, 16),
+                        item['status'] == 'Paid'
+                      ),
+                    );
+                  },
+                ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const FormScreen(title: 'Add New Material')),
+          );
+          if (result == true) {
+            _fetchMaterials();
+          }
+        },
+        backgroundColor: const Color(0xFFEA580C),
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('ADD MATERIAL', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
       ),
     );
   }

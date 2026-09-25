@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'form_screen.dart';
+import 'invoice_screen.dart';
 
 class BudgetScreen extends StatelessWidget {
   const BudgetScreen({super.key});
@@ -15,6 +17,17 @@ class BudgetScreen extends StatelessWidget {
           'Cost & Budget',
           style: GoogleFonts.merriweather(color: const Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 18),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.receipt_long, color: Color(0xFFEA580C)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const InvoiceScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -24,75 +37,44 @@ class BudgetScreen extends StatelessWidget {
               decoration: BoxDecoration(border: Border.all(color: const Color(0xFFE2E8F0))),
               child: Column(
                 children: [
-                  _buildFinancialRow('Total Contract Value', '₹50,00,000', Colors.white, const Color(0xFF0F172A)),
-                  _buildFinancialRow('Amount Paid', '₹32,00,000', const Color(0xFFF0FDF4), Colors.green),
-                  _buildFinancialRow('Amount Remaining', '₹18,00,000', const Color(0xFFFFF7ED), const Color(0xFFEA580C)),
+                  _buildFinancialRow('Total Contract Value', '₹0', Colors.white, const Color(0xFF0F172A)),
+                  _buildFinancialRow('Amount Paid', '₹0', const Color(0xFFF0FDF4), Colors.green),
+                  _buildFinancialRow('Amount Remaining', '₹0', const Color(0xFFFFF7ED), const Color(0xFFEA580C)),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            
+            const SizedBox(height: 32),
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: Color(0xFF0F172A),
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'ADDITIONAL EXPENSES',
-                        style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.5),
-                      ),
-                      Container(color: const Color(0xFF334155), padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2), child: const Text('STRICT', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold))),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  const Text('Requires Customer Approval', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+                  Icon(Icons.account_balance_wallet_outlined, size: 64, color: const Color(0xFFCBD5E1)),
                   const SizedBox(height: 16),
-                  
-                  const Text('Pending Request:', style: TextStyle(color: Color(0xFFFBA11B), fontSize: 11, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Borewell Motor Change', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                      const Text('₹25,000', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFEA580C),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      child: const Text('APPROVE EXPENSE', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
-                    ),
-                  )
+                  Text('No Budget Data', style: GoogleFonts.merriweather(fontWeight: FontWeight.bold, fontSize: 18, color: const Color(0xFF0F172A))),
+                  const SizedBox(height: 8),
+                  Text('Hit the "ADD EXPENSE" button below to log your first extra expense.', textAlign: TextAlign.center, style: TextStyle(color: const Color(0xFF64748B), fontSize: 13)),
                 ],
               ),
-            ),
-            
-            const SizedBox(height: 24),
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text('PAYMENT MILESTONES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF64748B), letterSpacing: 1)),
-            ),
-            const SizedBox(height: 12),
-            _buildMilestone('Plinth Level (20%)', '₹10,00,000', true),
-            _buildMilestone('Roof Slab (25%)', '₹12,50,000', true),
-            _buildMilestone('Brickwork (20%)', '₹10,00,000', false),
+            )
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const FormScreen(title: 'Add New Expense')),
+          );
+        },
+        backgroundColor: const Color(0xFFEA580C),
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('ADD EXPENSE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
       ),
     );
   }
