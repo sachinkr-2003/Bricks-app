@@ -8,6 +8,7 @@ import 'screens/updates_screen.dart';
 import 'screens/budget_screen.dart';
 import 'screens/warranty_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/profile_screen.dart'; // ✅ Profile Screen
 
 void main() {
   runApp(const BrickByBrickApp());
@@ -23,16 +24,14 @@ class BrickByBrickApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        // Classic, strict color palette
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFEA580C), // Orange
-          primary: const Color(0xFF0F172A), // Slate 900
+          seedColor: const Color(0xFFEA580C),
+          primary: const Color(0xFF0F172A),
           secondary: const Color(0xFFEA580C),
-          background: const Color(0xFFF8FAFC), // Slate 50
+          background: const Color(0xFFF8FAFC),
           surface: Colors.white,
         ),
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-        // Professional Serif/Sans-serif hybrid look
         textTheme: GoogleFonts.interTextTheme(Theme.of(context).textTheme).copyWith(
           displayLarge: GoogleFonts.merriweather(),
           displayMedium: GoogleFonts.merriweather(),
@@ -41,7 +40,6 @@ class BrickByBrickApp extends StatelessWidget {
           headlineMedium: GoogleFonts.merriweather(),
           headlineSmall: GoogleFonts.merriweather(),
         ),
-        // SQUARE DESIGN: No rounded corners anywhere
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
@@ -83,6 +81,7 @@ class _MainNavigationState extends State<MainNavigation> {
       const MaterialsScreen(),
       const BudgetScreen(),
       const WarrantyScreen(),
+      const ProfileScreen(), // ✅ Profile tab
     ];
   }
 
@@ -101,8 +100,8 @@ class _MainNavigationState extends State<MainNavigation> {
           backgroundColor: Colors.white,
           selectedItemColor: const Color(0xFFEA580C),
           unselectedItemColor: const Color(0xFF94A3B8),
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 10),
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 9),
           elevation: 0,
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.dashboard_outlined), activeIcon: Icon(Icons.dashboard), label: 'Home'),
@@ -110,6 +109,7 @@ class _MainNavigationState extends State<MainNavigation> {
             BottomNavigationBarItem(icon: Icon(Icons.inventory_2_outlined), activeIcon: Icon(Icons.inventory_2), label: 'Materials'),
             BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet_outlined), activeIcon: Icon(Icons.account_balance_wallet), label: 'Budget'),
             BottomNavigationBarItem(icon: Icon(Icons.verified_user_outlined), activeIcon: Icon(Icons.verified_user), label: 'Warranty'),
+            BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Profile'), // ✅ New
           ],
         ),
       ),

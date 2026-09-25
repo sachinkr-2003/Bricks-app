@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -226,6 +227,59 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _buildDetailRow('PHONE NUMBER', phone, Icons.phone_android, hasBorder: true),
                         _buildDetailRow('USER ROLE', role, Icons.shield, hasBorder: false),
                       ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // ✅ LOGOUT BUTTON
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                            title: Text('Logout', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                            content: Text('Are you sure you want to logout?', style: GoogleFonts.inter()),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: Text('Cancel', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFEA580C),
+                                  foregroundColor: Colors.white,
+                                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                                ),
+                                child: Text('Logout', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirm == true && mounted) {
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.remove('token');
+                          await prefs.remove('user');
+                          if (mounted) {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (_) => const LoginScreen()),
+                              (_) => false,
+                            );
+                          }
+                        }
+                      },
+                      icon: const Icon(Icons.logout, color: Color(0xFFEA580C), size: 18),
+                      label: Text('Logout', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFFEA580C))),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFEA580C), width: 1.5),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                      ),
                     ),
                   ),
                 ],

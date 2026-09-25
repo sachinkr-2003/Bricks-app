@@ -22,11 +22,11 @@ class ApiService {
     };
   }
 
-  // LOGIN API
+  // LOGIN API — App only (customer role)
   Future<Map<String, dynamic>> login(String phone, String pin) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/auth/login'),
+        Uri.parse('$baseUrl/auth/login/app'), // ✅ App-specific login
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'phone': phone, 'pin': pin}),
       );
