@@ -149,13 +149,61 @@ class _UpdatesScreenState extends State<UpdatesScreen> {
           ),
           if (photos.isNotEmpty)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.all(12),
               decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFE2E8F0)))),
-              child: Row(children: [
-                const Icon(Icons.photo_library, size: 16, color: Color(0xFFEA580C)),
-                const SizedBox(width: 8),
-                Text('${photos.length} photos attached', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
-              ]),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    const Icon(Icons.photo_library, size: 16, color: Color(0xFFEA580C)),
+                    const SizedBox(width: 8),
+                    Text('${photos.length} photos attached', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
+                  ]),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 70,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: photos.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (ctx, i) {
+                        final rawUrl = photos[i]?.toString() ?? '';
+                        final fullUrl = rawUrl.startsWith('http') ? rawUrl : 'https://bricks-backend-fk3q.onrender.com$rawUrl';
+                        return GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (_) => Dialog(
+                                backgroundColor: Colors.transparent,
+                                insetPadding: const EdgeInsets.all(16),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(fullUrl, fit: BoxFit.contain),
+                                ),
+                              ),
+                            );
+                          },
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: Image.network(
+                              fullUrl,
+                              width: 70,
+                              height: 70,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                width: 70,
+                                height: 70,
+                                color: Colors.grey.shade200,
+                                child: const Icon(Icons.broken_image, size: 24, color: Colors.grey),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                ],
+              ),
             ),
         ],
       ),

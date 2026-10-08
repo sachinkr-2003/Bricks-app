@@ -121,6 +121,9 @@ class ApiService {
 
   // MULTER IMAGE UPLOAD
   Future<Map<String, dynamic>> uploadImages(List<String> filePaths) async {
+    if (filePaths.isEmpty) {
+      return {'success': true, 'urls': []};
+    }
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token'); // get JWT token

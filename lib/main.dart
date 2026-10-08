@@ -10,7 +10,10 @@ import 'screens/warranty_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/profile_screen.dart'; // ✅ Profile Screen
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const BrickByBrickApp());
 }
 
@@ -28,7 +31,6 @@ class BrickByBrickApp extends StatelessWidget {
           seedColor: const Color(0xFFEA580C),
           primary: const Color(0xFF0F172A),
           secondary: const Color(0xFFEA580C),
-          background: const Color(0xFFF8FAFC),
           surface: Colors.white,
         ),
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
@@ -55,8 +57,49 @@ class BrickByBrickApp extends StatelessWidget {
           fillColor: Colors.white,
         ),
       ),
-      home: const LoginScreen(),
+      home: const AuthWrapper(),
     );
+  }
+}
+
+class AuthWrapper extends StatefulWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool _isLoading = true;
+  bool _isLoggedIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuth();
+  }
+
+  Future<void> _checkAuth() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    if (!mounted) return;
+    setState(() {
+      _isLoggedIn = token != null && token.isNotEmpty;
+      _isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF0F172A),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFFEA580C)),
+        ),
+      );
+    }
+    return _isLoggedIn ? const MainNavigation() : const LoginScreen();
   }
 }
 

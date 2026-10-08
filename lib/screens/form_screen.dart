@@ -53,17 +53,19 @@ class _FormScreenState extends State<FormScreen> {
     setState(() => _isSaving = true);
 
     try {
-      // 1. Upload Images First
-      List<String> filePaths = _selectedImages.map((f) => f.path).toList();
-      final uploadResult = await ApiService().uploadImages(filePaths);
-      
-      if (!uploadResult['success']) {
-        throw Exception(uploadResult['message']);
+      // 1. Upload Images ONLY IF user selected any
+      List<dynamic> urls = [];
+      String mainImageUrl = '';
+      if (_selectedImages.isNotEmpty) {
+        List<String> filePaths = _selectedImages.map((f) => f.path).toList();
+        final uploadResult = await ApiService().uploadImages(filePaths);
+        if (uploadResult['success'] == true) {
+          urls = uploadResult['urls'] ?? [];
+          if (urls.isNotEmpty) mainImageUrl = urls[0];
+        } else {
+          throw Exception(uploadResult['message'] ?? 'Image upload failed');
+        }
       }
-      
-      // We get a list of URLs from the backend
-      List<dynamic> urls = uploadResult['urls'];
-      String mainImageUrl = urls.isNotEmpty ? urls[0] : '';
 
       // 2. Determine Endpoint and Payload based on Form Title
       String endpoint = '';
@@ -72,36 +74,39 @@ class _FormScreenState extends State<FormScreen> {
       if (widget.title == 'Add New Material') {
         endpoint = '/materials';
         payload = {
-          'materialName': _controllers['Material Name']?.text ?? '',
-          'quantity': num.tryParse(_controllers['Quantity']?.text ?? '0') ?? 0,
-          'unit': _controllers['Unit']?.text ?? 'Bags',
-          'totalCost': num.tryParse(_controllers['Total Amount (₹)']?.text ?? '0') ?? 0,
-          'supplierName': _controllers['Supplier Name']?.text ?? '',
+          'materialName': _getController('Material Name').text,
+          'quantity': num.tryParse(_getController('Quantity').text) ?? 0,
+          'unit': _getController('Unit').text.isNotEmpty ? _getController('Unit').text : 'Bags',
+          'totalCost': num.tryParse(_getController('Total Amount (₹)').text) ?? 0,
+          'supplierName': _getController('Supplier Name').text,
           'status': 'Pending',
           'billImage': mainImageUrl,
         };
       } else if (widget.title == 'Add New Expense') {
         endpoint = '/expenses';
         payload = {
-          'title': _controllers['Expense Title']?.text ?? '',
-          'amount': num.tryParse(_controllers['Amount (₹)']?.text ?? '0') ?? 0,
-          'paidTo': _controllers['Paid To']?.text ?? '',
-          'remarks': _controllers['Expense Remarks']?.text ?? 'None',
+          'title': _getController('Expense Title').text,
+          'amount': num.tryParse(_getController('Amount (₹)').text) ?? 0,
+          'paidTo': _getController('Paid To').text,
+          'remarks': _getController('Expense Remarks').text.isNotEmpty ? _getController('Expense Remarks').text : 'None',
           'status': 'Pending',
           'billImage': mainImageUrl,
         };
       } else if (widget.title == 'Submit Daily Update') {
         endpoint = '/updates';
         payload = {
-          'workCompleted': _controllers['Work Completed Today']?.text ?? '',
-          'workInProgress': _controllers['Work In Progress']?.text ?? 'None',
-          'nextPlan': _controllers['Next Plan (Tomorrow)']?.text ?? 'None',
-          'issues': _controllers['Any Issues/Delays?']?.text ?? 'None',
+          'workCompleted': _getController('Work Completed Today').text,
+          'workInProgress': _getController('Work In Progress').text.isNotEmpty ? _getController('Work In Progress').text : 'None',
+          'nextPlan': _getController('Next Plan (Tomorrow)').text.isNotEmpty ? _getController('Next Plan (Tomorrow)').text : 'None',
+          'issues': _getController('Any Issues/Delays?').text.isNotEmpty ? _getController('Any Issues/Delays?').text : 'None',
           'photos': urls.isNotEmpty ? urls : [], // save all photos
         };
-      } else {
-        // Fallback demo for others
-        await Future.delayed(const Duration(seconds: 1));
+      } else if (widget.title == 'Lodge Complaint') {
+        endpoint = '/warranties';
+        payload = {
+          'issueType': _getController('Issue Title').text.isNotEmpty ? _getController('Issue Title').text : 'Other',
+          'description': _getController('Detailed Description').text.isNotEmpty ? _getController('Detailed Description').text : 'Complaint submitted via app',
+        };
       }
 
       // 3. Post Final Payload if endpoint exists
@@ -331,7 +336,11 @@ class _FormScreenState extends State<FormScreen> {
     );
   }
 
-  Map<String, TextEditingController> _controllers = {};
+  final Map<String, TextEditingController> _controllers = {};
+
+  TextEditingController _getController(String label) {
+    return _controllers.putIfAbsent(label, () => TextEditingController());
+  }
 
   @override
   void dispose() {
@@ -342,9 +351,7 @@ class _FormScreenState extends State<FormScreen> {
   }
 
   Widget _buildField(String label, String hint, IconData icon, {bool isLarge = false}) {
-    if (!_controllers.containsKey(label)) {
-      _controllers[label] = TextEditingController();
-    }
+    final controller = _getController(label);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -354,7 +361,7 @@ class _FormScreenState extends State<FormScreen> {
         ),
         const SizedBox(height: 6),
         TextField(
-          controller: _controllers[label],
+          controller: controller,
           maxLines: isLarge ? 3 : 1,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF0F172A)),
           decoration: InputDecoration(

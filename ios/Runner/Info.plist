@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Brick By Brick needs camera access to capture site progress and bill invoices.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Brick By Brick needs photo library access to upload construction photos and material receipts.</string>
 </dict>
 </plist>

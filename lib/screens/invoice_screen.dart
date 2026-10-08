@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class InvoiceScreen extends StatefulWidget {
   const InvoiceScreen({super.key});
@@ -16,6 +18,95 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   
   bool _showPreview = false;
+
+  Future<void> _generatePdf() async {
+    final doc = pw.Document();
+    doc.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Padding(
+            padding: const pw.EdgeInsets.all(24),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text('BRICK BY BRICK', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold)),
+                        pw.Text('Premium Construction Management', style: const pw.TextStyle(fontSize: 10)),
+                      ],
+                    ),
+                    pw.Container(
+                      padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      color: PdfColors.orange700,
+                      child: pw.Text('INVOICE', style: pw.TextStyle(color: PdfColors.white, fontWeight: pw.FontWeight.bold, fontSize: 16)),
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 24),
+                pw.Divider(thickness: 1),
+                pw.SizedBox(height: 12),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text('BILLED TO:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                        pw.Text(_clientController.text, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14)),
+                        if (_projectController.text.isNotEmpty)
+                          pw.Text('Site: ${_projectController.text}', style: const pw.TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.end,
+                      children: [
+                        pw.Text('Date: ${DateTime.now().toString().substring(0, 10)}', style: const pw.TextStyle(fontSize: 11)),
+                        pw.Text('Invoice #: BBB-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}', style: const pw.TextStyle(fontSize: 11)),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 24),
+                pw.Table(
+                  border: pw.TableBorder.all(color: PdfColors.grey300),
+                  children: [
+                    pw.TableRow(
+                      decoration: const pw.BoxDecoration(color: PdfColors.grey100),
+                      children: [
+                        pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text('Description', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                        pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text('Amount (INR)', style: pw.TextStyle(fontWeight: pw.FontWeight.bold), textAlign: pw.TextAlign.right)),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(_descriptionController.text.isNotEmpty ? _descriptionController.text : 'Contractual Construction Work')),
+                        pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text('Rs. ${_amountController.text}', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 24),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.end,
+                  children: [
+                    pw.Text('Total Payable: Rs. ${_amountController.text}', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.orange800)),
+                  ],
+                ),
+                pw.SizedBox(height: 48),
+                pw.Text('Thank you for choosing Brick By Brick!', style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey700)),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+    await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => doc.save(), name: 'Invoice-${_clientController.text}.pdf');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -102,10 +193,14 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
         leading: IconButton(icon: const Icon(Icons.arrow_back, color: Color(0xFF0F172A)), onPressed: () => setState(() => _showPreview = false)),
         actions: [
           IconButton(
+            icon: const Icon(Icons.print, color: Color(0xFFEA580C)),
+            tooltip: 'Print or Save PDF',
+            onPressed: _generatePdf,
+          ),
+          IconButton(
             icon: const Icon(Icons.share, color: Color(0xFFEA580C)),
-            onPressed: () {
-               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Take a screenshot to share this invoice with the client!')));
-            }
+            tooltip: 'Share PDF',
+            onPressed: _generatePdf,
           ),
         ],
       ),

@@ -75,15 +75,18 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
                   itemCount: _materials.length,
                   itemBuilder: (context, index) {
                     final item = _materials[index];
+                    final rawDate = item['date']?.toString() ?? '';
+                    final dateStr = rawDate.length >= 10 ? rawDate.substring(0, 10) : 'Recent';
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: _buildMaterialCard(
-                        item['materialName'] ?? 'Unknown',
-                        '${item['quantity']} ${item['unit']}',
-                        item['supplierName'] ?? 'Unknown',
-                        '₹${item['totalCost']}',
-                        'Date: ${item['date']}'.substring(0, 16),
-                        item['status'] == 'Paid'
+                        name: item['materialName'] ?? 'Unknown',
+                        qty: '${item['quantity'] ?? 0} ${item['unit'] ?? ''}',
+                        supplier: item['supplierName'] ?? 'Unknown',
+                        amount: '₹${item['totalCost'] ?? 0}',
+                        date: dateStr,
+                        isPaid: item['status'] == 'Paid',
+                        billImage: item['billImage']?.toString(),
                       ),
                     );
                   },
@@ -106,7 +109,15 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
     );
   }
 
-  Widget _buildMaterialCard(String name, String qty, String supplier, String amount, String date, bool isPaid) {
+  Widget _buildMaterialCard({
+    required String name,
+    required String qty,
+    required String supplier,
+    required String amount,
+    required String date,
+    required bool isPaid,
+    String? billImage,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -149,7 +160,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         border: Border.all(color: isPaid ? Colors.green : const Color(0xFFEA580C)),
-                        color: isPaid ? Colors.green.withOpacity(0.1) : const Color(0xFFEA580C).withOpacity(0.1),
+                        color: isPaid ? Colors.green.withValues(alpha: 0.1) : const Color(0xFFEA580C).withValues(alpha: 0.1),
                       ),
                       child: Text(
                         isPaid ? 'PAID' : 'PENDING',
@@ -161,16 +172,55 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: const BoxDecoration(color: Color(0xFFF8FAFC), border: Border(top: BorderSide(color: Color(0xFFE2E8F0)))),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.receipt, size: 16, color: Color(0xFF0F172A)),
-                const SizedBox(width: 8),
-                const Text('VIEW BILL INVOICE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF0F172A), letterSpacing: 0.5)),
-              ],
+          InkWell(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: Text(name, style: GoogleFonts.merriweather(fontWeight: FontWeight.bold, fontSize: 16)),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Supplier: $supplier', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        Text('Quantity: $qty'),
+                        Text('Total Amount: $amount'),
+                        Text('Date: $date'),
+                        const SizedBox(height: 12),
+                        if (billImage != null && billImage.isNotEmpty) ...[
+                          const Text('Attached Bill Photo:', style: TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: Image.network(
+                              billImage.startsWith('http') ? billImage : 'https://bricks-backend-fk3q.onrender.com$billImage',
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => const Text('Could not load bill image'),
+                            ),
+                          ),
+                        ] else
+                          const Text('No bill image attached.', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CLOSE')),
+                  ],
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: const BoxDecoration(color: Color(0xFFF8FAFC), border: Border(top: BorderSide(color: Color(0xFFE2E8F0)))),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.receipt, size: 16, color: Color(0xFF0F172A)),
+                  const SizedBox(width: 8),
+                  const Text('VIEW BILL INVOICE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF0F172A), letterSpacing: 0.5)),
+                ],
+              ),
             ),
           )
         ],
